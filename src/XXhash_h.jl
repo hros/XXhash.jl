@@ -146,16 +146,39 @@ end
 
 #= 
 XXH3 hashing algorithms - high speed 64 and 128 bit hash =#
+"""
+    XXH3_64bits(data)
+ default 64-bit variant, using default secret and default seed of 0.
+ It's the fastest variant
+"""
 @inline function XXH3_64bits(data::Any)::Culonglong
-   ccall((:XXH3_64bits, xxHash_jll.libxxhash), Culonglong,
+    ccall((:XXH3_64bits, xxHash_jll.libxxhash), Culonglong,
   (Ptr{Cvoid}, Csize_t),
   Ref(data), sizeof(data))
 end
+"""
+    XXH3_64bits_withSecret(data, secret)
+It's possible to provide any blob of bytes as a "secret" to generate the hash.
+This makes it more difficult for an external actor to prepare an intentional
+collision.
+The secret *must* be large enough (>= XXH3_SECRET_SIZE_MIN=136).
+It should consist of random bytes.
+Avoid trivial sequences, such as repeating sequences and especially '\0',
+as this can cancel out itself.
+Failure to respect these conditions will result in a poor quality hash.
+"""
 @inline function XXH3_64bits_withSecret(data::Any, secret::Any)::Culonglong
    ccall((:XXH3_64bits_withSecret, xxHash_jll.libxxhash), Culonglong,
   (Ptr{Cvoid}, Csize_t, Ptr{Cvoid}, Csize_t),
   Ref(data), sizeof(data), Ref(secret), sizeof(secret))
 end
+"""
+    XXH3_64bits_withSeeed(data, seed)
+This variant generates a custom secret on the fly based on the default
+secret, altered using the `seed` value.
+While this operation is decently fast, note that it's not completely free.
+Note: seed==0 produces the same results as XXH3_64bits().
+"""
 @inline function XXH3_64bits_withSeeed(data::Any, seed::Culonglong)::Culonglong
    ccall((:XXH3_64bits_withSeeed, xxHash_jll.libxxhash), Culonglong,
   (Ptr{Cvoid}, Csize_t, Culonglong),
@@ -225,8 +248,58 @@ end
          (Ptr{XXH3_state_t},), state)
 end
 
+#= 
 @ctypedef XXH128_hash_t @cstruct XXH128_hash_s {
    low64::Culonglong
    high64::Culonglong
-}
+} =# 
+struct XXH128_hash_t
+   low64::Culonglong
+   high64::Culonglong
+end
 
+@inline u64hl2u128(h::UInt64, l::UInt64)::UInt128 = ((h % UInt128) << 64) | l
+
+
+@inline function XXH3_128bits(data::Any)::UInt128
+    t = ccall((:XXH3_128bits, xxHash_jll.libxxhash), XXH128_hash_t,
+  (Ptr{Cvoid}, Csize_t),
+  Ref(data), sizeof(data))
+  u64hl2u128(t.high64, t.low64)
+end
+#= 
+XXH128_hash_t XXH3_128bits(const void* data, size_t len);
+XXH128_hash_t XXH3_128bits_withSeed(const void* data, size_t len, XXH64_hash_t seed);   == XXH128()
+XXH128_hash_t XXH3_128bits_withSecret(const void* data, size_t len, const void* secret, size_t secretSize);
+const XXH128 = XXH3_128bits_withSeed
+
+XXH_errorcode XXH3_128bits_reset(XXH3_state_t* statePtr);
+XXH_errorcode XXH3_128bits_reset_withSeed(XXH3_state_t* statePtr, XXH64_hash_t seed);
+XXH_errorcode XXH3_128bits_reset_withSecret(XXH3_state_t* statePtr, const void* secret, size_t secretSize);
+
+XXH_errorcode XXH3_128bits_update (XXH3_state_t* statePtr, const void* input, size_t length);
+XXH128_hash_t XXH3_128bits_digest (const XXH3_state_t* statePtr);
+
+
+/*!
+ * XXH128_isEqual():
+ * Return: 1 if `h1` and `h2` are equal, 0 if they are not.
+ */
+int XXH128_isEqual(XXH128_hash_t h1, XXH128_hash_t h2);
+
+/*!
+ * XXH128_cmp():
+ *
+ * This comparator is compatible with stdlib's `qsort()`/`bsearch()`.
+ *
+ * return: >0 if *h128_1  > *h128_2
+ *         <0 if *h128_1  < *h128_2
+ *         =0 if *h128_1 == *h128_2
+ */
+int XXH128_cmp(const void* h128_1, const void* h128_2);
+
+
+/*******   Canonical representation   *******/
+typedef struct { unsigned char digest[16]; } XXH128_canonical_t;
+void XXH128_canonicalFromHash(XXH128_canonical_t* dst, XXH128_hash_t hash);
+XXH128_hash_t XXH128_hashFromCanonical(const XXH128_canonical_t* src); =#
