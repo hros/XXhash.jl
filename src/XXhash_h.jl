@@ -244,7 +244,7 @@ end
          state, input, len)
 end
 @inline function XXH3_64bits_digest(state::Ptr{XXH3_state_t})::UInt32
-    ccall((:XXH3_digest, xxHash_jll.libxxhash), Cuint,
+    ccall((:XXH3_64bits_digest, xxHash_jll.libxxhash), Cuint,
          (Ptr{XXH3_state_t},), state)
 end
 
@@ -256,9 +256,10 @@ end
 struct XXH128_hash_t
    low64::Culonglong
    high64::Culonglong
-end
+end 
 
 @inline u64hl2u128(h::UInt64, l::UInt64)::UInt128 = ((h % UInt128) << 64) | l
+@inline u1282u64hl(v::UInt128)::XXH128_hash_t = XXH128_hash_t((v & 0xffffffffffffffff) % UInt64, (v >> 64) % UInt64)
 
 
 @inline function XXH3_128bits(data::Any)::UInt128
@@ -267,39 +268,67 @@ end
   Ref(data), sizeof(data))
   u64hl2u128(t.high64, t.low64)
 end
-#= 
-XXH128_hash_t XXH3_128bits(const void* data, size_t len);
-XXH128_hash_t XXH3_128bits_withSeed(const void* data, size_t len, XXH64_hash_t seed);   == XXH128()
-XXH128_hash_t XXH3_128bits_withSecret(const void* data, size_t len, const void* secret, size_t secretSize);
+
+@inline function XXH3_128bits_withSeed(data::Any, seed::Culonglong)::UInt128
+    t = ccall((:XXH3_128bits_withSeed, xxHash_jll.libxxhash), XXH128_hash_t,
+  (Ptr{Cvoid}, Csize_t, Culonglong),
+  Ref(data), sizeof(data), seed)
+  u64hl2u128(t.high64, t.low64)
+end
+
+@inline function XXH3_128bits_withSecret(data::Any, secret::Any)::UInt128
+    t = ccall((:XXH3_128bits_withSecret, xxHash_jll.libxxhash), XXH128_hash_t,
+  (Ptr{Cvoid}, Csize_t, Ptr{Cvoid}, Csize_t),
+  Ref(data), sizeof(data), Ref(secret), sizeof(secret))
+  u64hl2u128(t.high64, t.low64)
+end
 const XXH128 = XXH3_128bits_withSeed
 
-XXH_errorcode XXH3_128bits_reset(XXH3_state_t* statePtr);
-XXH_errorcode XXH3_128bits_reset_withSeed(XXH3_state_t* statePtr, XXH64_hash_t seed);
-XXH_errorcode XXH3_128bits_reset_withSecret(XXH3_state_t* statePtr, const void* secret, size_t secretSize);
+@inline function XXH3_128bits_reset(state::Ptr{XXH3_state_t})::Cuint
+    ccall((:XXH3_128bits_reset, xxHash_jll.libxxhash), Cuint,
+  (Ptr{XXH3_state_t},),
+  state)
+end
 
-XXH_errorcode XXH3_128bits_update (XXH3_state_t* statePtr, const void* input, size_t length);
-XXH128_hash_t XXH3_128bits_digest (const XXH3_state_t* statePtr);
+@inline function XXH3_128bits_reset_withSeed(state::Ptr{XXH3_state_t}, seed::Culonglong)::Cuint
+    ccall((:XXH3_128bits_reset_withSeed, xxHash_jll.libxxhash), Cuint,
+  (Ptr{XXH3_state_t}, Culonglong),
+  state, seed)
+end
 
-
-/*!
- * XXH128_isEqual():
- * Return: 1 if `h1` and `h2` are equal, 0 if they are not.
- */
-int XXH128_isEqual(XXH128_hash_t h1, XXH128_hash_t h2);
-
-/*!
- * XXH128_cmp():
- *
- * This comparator is compatible with stdlib's `qsort()`/`bsearch()`.
- *
- * return: >0 if *h128_1  > *h128_2
- *         <0 if *h128_1  < *h128_2
- *         =0 if *h128_1 == *h128_2
- */
-int XXH128_cmp(const void* h128_1, const void* h128_2);
+@inline function XXH3_128bits_reset_withSecret(state::Ptr{XXH3_state_t}, secret::Any)::Cuint
+    ccall((:XXH3_128bits_reset_withSecret, xxHash_jll.libxxhash), Cuint,
+  (Ptr{XXH3_state_t}, Ptr{Cvoid}, Csize_t),
+  state, Ref{secret}, sizeof(secret))
+end
 
 
-/*******   Canonical representation   *******/
-typedef struct { unsigned char digest[16]; } XXH128_canonical_t;
-void XXH128_canonicalFromHash(XXH128_canonical_t* dst, XXH128_hash_t hash);
-XXH128_hash_t XXH128_hashFromCanonical(const XXH128_canonical_t* src); =#
+@inline function XXH3_128bits_update(state::Ptr{XXH3_state_t}, data::Any)::Cint
+    input = Ref(data)
+    len = sizeof(data)
+    ccall((:XXH3_128bits_update, xxHash_jll.libxxhash), Cuint,
+         (Ptr{XXH3_state_t}, Ptr{Cvoid}, Csize_t),
+         state, input, len)
+end
+@inline function XXH3_128bits_digest(state::Ptr{XXH3_state_t})::UInt128
+    t = ccall((:XXH3_128bits_digest, xxHash_jll.libxxhash), XXH128_hash_t,
+         (Ptr{XXH3_state_t},), state)
+    u64hl2u128(t.high64, t.low64)
+end
+
+
+@ctypedef XXH128_canonical_t @cstruct {
+    digest::Cuchar[16]
+}
+
+@inline function XXH128_canonicalFromHash(h::UInt128)::NTuple{16,Cuchar}
+    c = Ref(NTuple{16,Cuchar}((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
+    ccall((:XXH128_canonicalFromHash, xxHash_jll.libxxhash), Cvoid,
+         (Ptr{NTuple{16,Cuchar}}, XXH128_hash_t), c, u1282u64hl(h))
+    return c[]
+end
+@inline function XXH128_hashFromCanonical(c::NTuple{16,Cuchar})::UInt128
+    t = ccall((:XXH128_hashFromCanonical, xxHash_jll.libxxhash), XXH128_hash_t,
+         (Ptr{NTuple{16,Cuchar}},), Ref(c))
+    u64hl2u128(t.high64, t.low64)
+end
