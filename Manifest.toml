@@ -4,10 +4,10 @@
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[CBinding]]
-deps = ["Libdl", "Random", "Test", "Todo"]
-git-tree-sha1 = "144bb3b29313c42176ccae25b2a1a9e88c1c1771"
+deps = ["Libdl", "Random", "Test"]
+git-tree-sha1 = "6d8e70f3f63d78441d2000f09f062ec1f220409f"
 uuid = "d43a6710-96b8-4a2d-833c-c424785e5374"
-version = "0.7.0"
+version = "0.9.0"
 
 [[Dates]]
 deps = ["Printf"]
@@ -22,6 +22,7 @@ deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
 [[LibGit2]]
+deps = ["Printf"]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 
 [[Libdl]]
@@ -63,12 +64,6 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[[Todo]]
-deps = ["Dates", "Test"]
-git-tree-sha1 = "f73f62d4b2ba21649d237722507f9b0ccc9d8b94"
-uuid = "b28a226c-6cff-11e9-1336-699fd753ab00"
-version = "0.1.0"
-
 [[UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
@@ -78,6 +73,6 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 [[xxHash_jll]]
 deps = ["Libdl", "Pkg"]
-git-tree-sha1 = "811edb3bd6f507a60144db289b026ff8c095de4a"
+git-tree-sha1 = "e22b9ddc8b3569c32eae44a084456c39699d7d8a"
 uuid = "5fdcd639-92d1-5a06-bf6b-28f2061df1a9"
-version = "0.7.3+0"
+version = "0.7.4+0"
