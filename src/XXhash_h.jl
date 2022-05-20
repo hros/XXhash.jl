@@ -76,7 +76,7 @@ end
 @inline function XXH32_update(state::Ptr{XXH32_state_t}, data::String)::Cint
    len = sizeof(data)
    ccall((:XXH32_update, libxxhash), Cuint,
-         (Ptr{XXH32_state_t}, CString, Csize_t),
+         (Ptr{XXH32_state_t}, Cstring, Csize_t),
          state, data, len)
 end
 @inline function XXH32_digest(state::Ptr{XXH32_state_t})::UInt32
