@@ -6,10 +6,10 @@ Julia wrapper for [xxHash](https://github.com/Cyan4973/xxHash) C library
 julia> using XXhash
 
 julia> xxh64("abc")
-0x31886f2e7daf8ca4
+0x44bc2cf5ad770999
 
 julia> xxh32([5,3,'a'])
-0xd0602ac3
+0x2cc136fd
 
 julia> s=XXH64stream();
 
