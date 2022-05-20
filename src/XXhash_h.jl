@@ -10,7 +10,7 @@ Compute a hash of any object `d` using the 32 bit [xxHash](http://cyan4973.githu
 # Examples
 ```julia-repl
 julia> xxh32("abc")
-0xfe8990bc
+0x32d153ff
 ```
 """
 @inline function xxh32(data::Any, seed::Union{Int32,UInt32}=UInt32(0))::UInt32
@@ -105,7 +105,7 @@ Compute a hash of any object `d` using the 64 bit [xxHash](http://cyan4973.githu
 # Examples
 ```julia-repl
 julia> xxh64("abc")
-0x31886f2e7daf8ca4
+0x44bc2cf5ad770999
 ```
 """
 @inline function xxh64(data::Any, seed::Union{Int64,UInt64}=0)::UInt64
