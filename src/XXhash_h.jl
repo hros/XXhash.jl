@@ -19,6 +19,12 @@ julia> xxh32("abc")
       Ref(data), sizeof(data), seed % UInt32)
 end
 
+@inline function xxh32(data::Array, seed::Union{Int64,UInt64}=0)::UInt64
+   ccall((:XXH32, libxxhash), Cuint,
+   (Ptr{Cvoid}, Csize_t, Cuint),
+   data, sizeof(data), seed % UInt32)
+end
+
 struct XXH32_state_t
    total_len_32::UInt32
    large_len::UInt32
@@ -50,6 +56,13 @@ end
 end
 @inline function XXH32_update(state::Ptr{XXH32_state_t}, data::Any)::Cint
    input = Ref(data)
+   len = sizeof(data)
+   ccall((:XXH32_update, libxxhash), Cuint,
+         (Ptr{XXH32_state_t}, Ptr{Cvoid}, Csize_t),
+         state, input, len)
+end
+@inline function XXH32_update(state::Ptr{XXH32_state_t}, data::Array)::Cint
+   input = data
    len = sizeof(data)
    ccall((:XXH32_update, libxxhash), Cuint,
          (Ptr{XXH32_state_t}, Ptr{Cvoid}, Csize_t),
@@ -89,6 +102,11 @@ julia> xxh64("abc")
    (Ptr{Cvoid}, Csize_t, Culonglong),
    Ref(data), sizeof(data), seed % UInt64)
 end
+@inline function xxh64(data::Array, seed::Union{Int64,UInt64}=0)::UInt64
+   ccall((:XXH64, libxxhash), Culonglong,
+   (Ptr{Cvoid}, Csize_t, Culonglong),
+   data, sizeof(data), seed % UInt64)
+end
 
 struct XXH64_state_t
    total_len::UInt64
@@ -120,6 +138,13 @@ end
 end
 @inline function XXH64_update(state::Ptr{XXH64_state_t}, data::Any)::Cint
    input = Ref(data)
+   len = sizeof(data)
+   ccall((:XXH64_update, libxxhash), Cuint,
+         (Ptr{XXH64_state_t}, Ptr{Cvoid}, Csize_t),
+         state, input, len)
+end
+@inline function XXH64_update(state::Ptr{XXH64_state_t}, data::Array)::Cint
+   input = data
    len = sizeof(data)
    ccall((:XXH64_update, libxxhash), Cuint,
          (Ptr{XXH64_state_t}, Ptr{Cvoid}, Csize_t),
