@@ -19,13 +19,13 @@ julia> xxh32("abc")
       Ref(data), sizeof(data), seed % UInt32)
 end
 
-@inline function xxh32(data::Array, seed::Union{Int64,UInt64}=0)::UInt64
+@inline function xxh32(data::Array, seed::Union{Int64,UInt64}=0)::UInt32
    ccall((:XXH32, libxxhash), Cuint,
    (Ptr{Cvoid}, Csize_t, Cuint),
    data, sizeof(data), seed % UInt32)
 end
 
-@inline function xxh32(data::String, seed::Union{Int64,UInt64}=0)::UInt64
+@inline function xxh32(data::String, seed::Union{Int64,UInt64}=0)::UInt32
    ccall((:XXH32, libxxhash), Cuint,
    (Cstring, Csize_t, Cuint),
    data, sizeof(data), seed % UInt32)
