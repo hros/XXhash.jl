@@ -1,18 +1,10 @@
 module XXhash
-#
+
+using xxHash_jll
+
 export xxh32, XXH32stream, xxh64, XXH64stream,
        xxhash_update, xxhash_digest,
        xxhash_fromcanonical, xxhash_tocanonical
-# Load XXhash libraries from our deps.jl
-const depsjl_path = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
-if !isfile(depsjl_path)
-    error("XXhash not installed properly, run Pkg.build(\"XXhash\"), restart Julia and try again")
-end
-include(depsjl_path)
-
-function __init__()
-    check_deps()
-end
 
 include("XXhash_h.jl")
 """
