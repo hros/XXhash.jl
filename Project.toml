@@ -1,9 +1,11 @@
 name = "XXhash"
 uuid = "137af188-b1ec-11e9-0b40-31ed9142ae64"
-version = "0.7.3"
+version = "0.8.1"
 
 [deps]
 CBinding = "d43a6710-96b8-4a2d-833c-c424785e5374"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 xxHash_jll = "5fdcd639-92d1-5a06-bf6b-28f2061df1a9"
 
 [compat]
