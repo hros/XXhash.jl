@@ -29,13 +29,13 @@ Compute a hash of any object `d` using the 32 bit [xxHash](http://cyan4973.githu
 # Examples
 ```julia-repl
 julia> xxh32("abc")
-0x9e84ce64
+0x32d153ff
 
 julia> xxh32([1, 2, 3])
 0x2a1c9a49
 ```
 """
-@inline xxh32(data::Array, seed::Union{Int32,UInt32}=UInt32(0))::UInt32 = libxxhash.XXH32(data, sizeof(data), seed % UInt32)
+@inline xxh32(data::Union{Array,String}, seed::Union{Int32,UInt32}=UInt32(0))::UInt32 = GC.@preserve data libxxhash.XXH32(pointer(data), sizeof(data), seed % UInt32)
 @inline xxh32(data::Any, seed::Union{Int32,UInt32}=UInt32(0))::UInt32 = libxxhash.XXH32(Ref(data), sizeof(data), seed % UInt32)
 
 
@@ -49,13 +49,13 @@ Compute a hash of any object `d` using the 64 bit [xxHash](http://cyan4973.githu
 # Examples
 ```julia-repl
 julia> xxh64("abc")
-0xf4740f6daf499e0e
+0x44bc2cf5ad770999
 
-julia> xxh64("abc")
+julia> xxh64([1,2,3])
 0x8799e152e5c0cdfa
 ```
 """
-@inline xxh64(data::Array, seed::Union{Int64,UInt64}=0)::UInt64 = libxxhash.XXH64(data, sizeof(data), seed % UInt32)
+@inline xxh64(data::Union{Array,String}, seed::Union{Int64,UInt64}=0)::UInt64 = GC.@preserve data libxxhash.XXH64(pointer(data), sizeof(data), seed % UInt32)
 @inline xxh64(data::Any, seed::Union{Int64,UInt64}=0)::UInt64 = libxxhash.XXH64(Ref(data), sizeof(data), seed % UInt32)
 
 
@@ -86,8 +86,9 @@ See also: [`xxhash_digest`](@ref), [`XXH32stream`](@ref), [`XXH64stream`](@ref),
 """
 @inline xxhash_update(stream::XXH32stream, data::Any)::Cint =
     libxxhash.libxxhash.XXH32_update(stream.state_ptr, Ref(data), sizeof(data))
-@inline xxhash_update(stream::XXH32stream, data::Array)::Cint =
-    libxxhash.libxxhash.XXH32_update(stream.state_ptr, data, sizeof(data))
+
+@inline xxhash_update(stream::XXH32stream, data::Union{Array,String})::Cint =
+    GC.@preserve data libxxhash.libxxhash.XXH32_update(stream.state_ptr, pointer(data), sizeof(data))
 
 """
     xxhash_digest(xxhash_stream)
@@ -145,8 +146,9 @@ mutable struct XXH64stream
 end
 @inline xxhash_update(stream::XXH64stream, data::Any)::Cint =
     libxxhash.XXH64_update(stream.state_ptr, Ref(data), sizeof(data))
-@inline xxhash_update(stream::XXH64stream, data::Array)::Cint =
-    libxxhash.XXH64_update(stream.state_ptr, data, sizeof(data))
+
+@inline xxhash_update(stream::XXH64stream, data::Union{Array,String})::Cint =
+    GC.@preserve data libxxhash.XXH64_update(stream.state_ptr, pointer(data), sizeof(data))
 
 @inline xxhash_digest(stream::XXH64stream)::UInt64 =
     libxxhash.XXH64_digest(stream.state_ptr)
@@ -209,22 +211,22 @@ The function has 3 methods:
 # Examples
 ```julia-repl
 julia> xxh3_64("abc")
-0x959ec3e5ffe12e7f
+0x78af5f94892f3950
 
 julia> xxh3_64("abc", UInt64(0))
-0x959ec3e5ffe12e7f
+0x78af5f94892f3950
 
 julia> xxh3_64(collect(100:200))
 0xff8cb2af8e253283
 ```
 """
-@inline xxh3_64(data::Array)::UInt64 = libxxhash.XXH3_64bits(data, sizeof(data))
+@inline xxh3_64(data::Union{Array,String})::UInt64 = GC.@preserve data libxxhash.XXH3_64bits(pointer(data), sizeof(data))
 @inline xxh3_64(data::Any)::UInt64 = libxxhash.XXH3_64bits(Ref(data), sizeof(data))
 
-@inline xxh3_64(data::Array, seed::libxxhash.XXH64_hash_t)::UInt64 = libxxhash.XXH3_64bits_withSeed(Ref(data), sizeof(data), seed)
+@inline xxh3_64(data::Union{Array,String}, seed::libxxhash.XXH64_hash_t)::UInt64 = GC.@preserve data libxxhash.XXH3_64bits_withSeed(pointer(data), sizeof(data), seed)
 @inline xxh3_64(data::Any, seed::libxxhash.XXH64_hash_t)::UInt64 = libxxhash.XXH3_64bits_withSeed(Ref(data), sizeof(data), seed)
 
-@inline xxh3_64(data::Array, secret::Array)::UInt64 = libxxhash.XXH3_64bits_withSecret(Ref(data), sizeof(data), secret, sizeof(secret))
+@inline xxh3_64(data::Union{Array,String}, secret::Array)::UInt64 = GC.@preserve data libxxhash.XXH3_64bits_withSecret(pointer(data), sizeof(data), secret, sizeof(secret))
 @inline xxh3_64(data::Any, secret::Array)::UInt64 = libxxhash.XXH3_64bits_withSecret(Ref(data), sizeof(data), secret, sizeof(secret))
 
 
@@ -252,22 +254,22 @@ The function has 3 methods:
 # Examples
 ```julia-repl
 julia> xxh3_128("abc")
-0xc9eacdcf5f8093fc959ec3e5ffe12e7f
+0x06b05ab6733a618578af5f94892f3950
 
 julia> xxh3_128("abc", UInt64(0))
-0xc9eacdcf5f8093fc959ec3e5ffe12e7f
+0x06b05ab6733a618578af5f94892f3950
 
 julia> xxh3_128(collect(100:200))
 0xc1d19d1716502f1cff8cb2af8e253283
 ```
 """
-@inline xxh3_128(data::Array)::UInt128 = XXH128_hash_to_U128(libxxhash.XXH3_128bits(data, sizeof(data)))
+@inline xxh3_128(data::Union{Array,String})::UInt128 = GC.@preserve data XXH128_hash_to_U128(libxxhash.XXH3_128bits(pointer(data), sizeof(data)))
 @inline xxh3_128(data::Any)::UInt128 = XXH128_hash_to_U128(libxxhash.XXH3_128bits(Ref(data), sizeof(data)))
 
-@inline xxh3_128(data::Array, seed::libxxhash.XXH64_hash_t)::UInt128 = XXH128_hash_to_U128(libxxhash.XXH3_128bits_withSeed(Ref(data), sizeof(data), seed))
+@inline xxh3_128(data::Union{Array,String}, seed::libxxhash.XXH64_hash_t)::UInt128 = GC.@preserve data XXH128_hash_to_U128(libxxhash.XXH3_128bits_withSeed(pointer(data), sizeof(data), seed))
 @inline xxh3_128(data::Any, seed::libxxhash.XXH64_hash_t)::UInt128 = XXH128_hash_to_U128(libxxhash.XXH3_128bits_withSeed(Ref(data), sizeof(data), seed))
 
-@inline xxh3_128(data::Array, secret::Array)::UInt128 = XXH128_hash_to_U128(libxxhash.XXH3_128bits_withSecret(Ref(data), sizeof(data), secret, sizeof(secret)))
+@inline xxh3_128(data::Union{Array,String}, secret::Array)::UInt128 = GC.@preserve data XXH128_hash_to_U128(libxxhash.XXH3_128bits_withSecret(pointer(data), sizeof(data), secret, sizeof(secret)))
 @inline xxh3_128(data::Any, secret::Array)::UInt64 = XXH128_hash_to_U128(libxxhash.XXH3_128bits_withSecret(Ref(data), sizeof(data), secret, sizeof(secret)))
 
 
@@ -300,11 +302,10 @@ mutable struct XXH3_64stream
     end
 end
 
-
 @inline xxhash_update(stream::XXH3_64stream, data::Any)::Cint =
     libxxhash.XXH3_64bits_update(stream.state_ptr, Ref(data), sizeof(data))
-@inline xxhash_update(stream::XXH3_64stream, data::Array)::Cint =
-    libxxhash.XXH3_64bits_update(stream.state_ptr, data, sizeof(data))
+@inline xxhash_update(stream::XXH3_64stream, data::Union{Array,String})::Cint =
+    GC.@preserve data libxxhash.XXH3_64bits_update(stream.state_ptr, pointer(data), sizeof(data))
 
 @inline xxhash_digest(stream::XXH3_64stream)::UInt64 =
     libxxhash.XXH3_64bits_digest(stream.state_ptr)
@@ -339,11 +340,10 @@ mutable struct XXH3_128stream
     end
 end
 
-
 @inline xxhash_update(stream::XXH3_128stream, data::Any)::Cint =
     libxxhash.XXH3_128bits_update(stream.state_ptr, Ref(data), sizeof(data))
-@inline xxhash_update(stream::XXH3_128stream, data::Array)::Cint =
-    libxxhash.XXH3_128bits_update(stream.state_ptr, data, sizeof(data))
+@inline xxhash_update(stream::XXH3_128stream, data::Union{Array,String})::Cint =
+    GC.@preserve data libxxhash.XXH3_128bits_update(stream.state_ptr, pointer(data), sizeof(data))
 
 @inline xxhash_digest(stream::XXH3_128stream)::UInt128 =
     XXH128_hash_to_U128(libxxhash.XXH3_128bits_digest(stream.state_ptr))
